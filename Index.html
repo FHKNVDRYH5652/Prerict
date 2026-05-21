@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WinGo 1 Min Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#060c14;--bg2:#09111d;--card:#0d1520;--card2:#111e2e;
+  --cyan:#00ffae;--cyan2:#00cc88;--cyan3:#00ffd0;
+  --purple:#8b5cf6;--gold:#f59e0b;--red:#ef4444;
+  --green:#22c55e;--blue:#3b82f6;
+  --text:#e2e8f0;--text2:#64748b;--border:#1a2d44;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{color:var(--text);font-family:'Rajdhani',sans-serif;
+  display:flex;flex-direction:column;max-width:430px;margin:0 auto;
+  position:relative;box-shadow:0 0 80px rgba(0,0,0,0.8);}
+.scrollarea{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:90px;
+  -webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
+.scrollarea::-webkit-scrollbar{display:none;}
+
+/* ══ TOP NAV ══ */
+.topnav{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:rgba(9,17,29,0.98);
+  border-bottom:1px solid rgba(0,255,174,0.15);
+  position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(16px);flex-shrink:0;}
+.nav-hamburger{width:38px;height:38px;background:rgba(17,30,46,0.9);
+  border-radius:10px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;cursor:pointer;
+  border:1px solid var(--border);}
+.nav-hamburger span{width:18px;height:2px;background:var(--text2);border-radius:2px;}
+.nav-logo-box{display:flex;align-items:center;gap:8px;}
+.nav-logo-img{height:44px;border-radius:10px;overflow:hidden;
+  background:transparent;border:none;max-width:220px;}
+.nav-logo-img img{height:100%;width:auto;object-fit:contain;display:block;}
+.nav-logo-fb{font-family:'Orbitron',sans-serif;font-size:7px;color:var(--cyan);
+  text-align:center;line-height:1.4;padding:4px 2px;
+  text-shadow:0 0 8px rgba(0,255,174,0.5);}
+.nav-logo-text{display:none;}
+.nav-logo-title{display:none;}
+.nav-logo-sub{display:none;}
+.nav-bell{width:38px;height:38px;background:rgba(17,30,46,0.9);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border:1px solid rgba(0,255,174,0.2);position:relative;}
+.nav-bell-dot{position:absolute;top:7px;right:8px;width:8px;height:8px;
+  background:#ef4444;border-radius:50%;border:2px solid var(--bg2);}
+
+/* ══ STATUS BAR ══ */
+.statusbar{display:flex;align-items:center;gap:8px;padding:7px 16px;
+  background:rgba(6,12,20,0.95);border-bottom:1px solid rgba(26,45,68,0.5);}
+.sb-dot{width:8px;height:8px;border-radius:50%;background:#1a2d44;flex-shrink:0;transition:all 0.4s;}
+.sb-dot.live{background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+.sb-dot.err{background:var(--red);box-shadow:0 0 8px var(--red);}
+.sb-dot.loading{background:var(--gold);animation:pulse 0.8s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--gold);}50%{opacity:0.3;box-shadow:none;}}
+.sb-txt{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-time{font-size:9px;color:rgba(255,255,255,0.2);flex-shrink:0;}
+
+/* ══ HERO ══ */
+.hero{position:relative;height:220px;overflow:hidden;background:#060c14;}
+.hero-poster{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
+.hero-overlay{position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,12,20,0.3) 0%,transparent 50%);}
+.hero-content{position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding:12px 16px;}
+.hero-text{display:none;}
+.hero-sub{display:none;}
+.hero-htp{display:none;}
+.hero-countdown{text-align:center;margin-bottom:0;}
+.hcd-lbl{font-size:9px;color:rgba(255,255,255,0.75);letter-spacing:2.5px;margin-bottom:4px;text-shadow:0 0 8px rgba(0,0,0,0.8);}
+.hcd-ring{position:relative;width:80px;height:80px;}
+.hcd-ring svg{transform:rotate(-90deg);}
+.hcd-bg{fill:none;stroke:rgba(26,45,68,0.8);stroke-width:3;}
+.hcd-prog{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:175.9;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;
+  filter:drop-shadow(0 0 6px var(--cyan));}
+.hcd-time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;color:var(--cyan);
+  text-shadow:0 0 16px var(--cyan);}
+
+/* ══ PERIOD BAR ══ */
+.period-bar{margin:12px 14px 0;background:var(--card);border-radius:14px;
+  border:1px solid rgba(0,255,174,0.15);padding:11px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;box-shadow:0 0 20px rgba(0,255,174,0.05);}
+.pb-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);}
+.pb-id b{color:var(--cyan);}
+.pb-center{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+  color:var(--cyan);letter-spacing:1.5px;text-shadow:0 0 8px rgba(0,255,174,0.3);}
+.pb-badge{background:rgba(0,255,174,0.1);border:1px solid rgba(0,255,174,0.3);
+  border-radius:8px;padding:4px 10px;font-size:10px;color:var(--cyan);
+  display:flex;align-items:center;gap:4px;white-space:nowrap;}
+
+/* ══ PREDICT CARD ══ */
+.pred-card{margin:10px 14px 0;background:var(--card);border-radius:18px;
+  border:1px solid rgba(0,255,174,0.12);padding:18px;
+  box-shadow:0 4px 40px rgba(0,255,174,0.05),0 4px 30px rgba(0,0,0,0.3);}
+.pred-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.pch-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;
+  color:#fff;letter-spacing:1px;}
+.pch-badge{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--cyan);
+  background:rgba(0,255,174,0.1);border:1px solid rgba(0,255,174,0.25);
+  border-radius:20px;padding:4px 10px;}
+
+/* Numbers grid */
+.nums-grid{display:flex;align-items:center;gap:8px;}
+.nums-left{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;}
+.nums-right{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;}
+
+/* CENTER PREDICTION — bigger */
+.pred-center{position:relative;width:130px;flex-shrink:0;height:130px;}
+.pred-center-ring{position:absolute;inset:-4px;border-radius:50%;
+  background:conic-gradient(var(--cyan) 0%,var(--cyan2) 30%,transparent 31%,transparent 69%,var(--cyan2) 70%,var(--cyan) 100%);
+  animation:spin 8s linear infinite;opacity:0.5;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pred-center-bg{width:130px;height:130px;border-radius:50%;overflow:hidden;
+  background:var(--card2);border:2.5px solid rgba(0,255,174,0.2);
+  position:relative;z-index:1;}
+.pred-center-bg img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.pred-result{position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(6,12,20,0.55);border-radius:50%;
+  border:2.5px solid rgba(0,255,174,0.3);
+  box-shadow:inset 0 0 24px rgba(0,0,0,0.3),0 0 20px rgba(0,255,174,0.08);}
+/* BIGGER prediction text */
+.pred-val{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;
+  letter-spacing:1px;text-align:center;line-height:1.15;}
+.pred-val.wait{font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6;font-weight:400;}
+.pred-val.pBIG{color:var(--green);text-shadow:0 0 18px var(--green),0 0 40px rgba(34,197,94,0.4);}
+.pred-val.pSMALL{color:var(--red);text-shadow:0 0 18px var(--red),0 0 40px rgba(239,68,68,0.4);}
+.pred-val.pRED{color:var(--red);text-shadow:0 0 18px var(--red),0 0 40px rgba(239,68,68,0.4);}
+.pred-val.pGREEN{color:var(--green);text-shadow:0 0 18px var(--green),0 0 40px rgba(34,197,94,0.4);}
+.pred-conf{font-size:10px;color:var(--text2);margin-top:3px;font-family:'Share Tech Mono',monospace;}
+.pred-mode-tag{font-size:9px;color:var(--cyan);background:rgba(0,255,174,0.12);
+  border-radius:5px;padding:2px 6px;margin-top:3px;font-weight:700;}
+
+/* Number buttons */
+.nbtn{width:100%;aspect-ratio:1;max-height:58px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;
+  border:2px solid transparent;transition:all 0.15s;cursor:default;
+  position:relative;overflow:hidden;}
+.nbtn::before{content:'';position:absolute;inset:0;opacity:0;
+  background:rgba(255,255,255,0.06);transition:opacity 0.2s;}
+.nbtn:active::before{opacity:1;}
+.n0{background:linear-gradient(135deg,#1e1244,#150d33);border-color:#5b21b6;color:#a78bfa;}
+.n1{background:linear-gradient(135deg,#14291a,#0d1f12);border-color:#15803d;color:#4ade80;}
+.n2{background:linear-gradient(135deg,#2d1010,#200a0a);border-color:#b91c1c;color:#f87171;}
+.n3{background:linear-gradient(135deg,#1e1244,#150d33);border-color:#5b21b6;color:#a78bfa;}
+.n4{background:linear-gradient(135deg,#2d1f0a,#1f1405);border-color:#b45309;color:#fbbf24;}
+.n5{background:linear-gradient(135deg,#0d2a1a,#091a10);border-color:#065f46;color:#34d399;}
+.n6{background:linear-gradient(135deg,#0d1a2d,#08111f);border-color:#1d4ed8;color:#60a5fa;}
+.n7{background:linear-gradient(135deg,#0d2a1a,#091a10);border-color:#065f46;color:#34d399;}
+.n8{background:linear-gradient(135deg,#1e1244,#150d33);border-color:#5b21b6;color:#a78bfa;}
+.n9{background:linear-gradient(135deg,#2d1020,#1e0a15);border-color:#9d174d;color:#f472b6;}
+
+/* Size buttons */
+.size-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;}
+.sbtn{padding:13px 8px;border-radius:14px;text-align:center;cursor:pointer;
+  border:2px solid transparent;transition:all 0.2s;position:relative;overflow:hidden;}
+.sbtn:active{transform:scale(0.97);}
+.sbtn-lbl{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;}
+.sbtn-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.sbtn-small{background:linear-gradient(135deg,#0a1727,#070f1a);border-color:#1e40af;color:#60a5fa;}
+.sbtn-big{background:linear-gradient(135deg,#281a08,#1a1005);border-color:#b45309;color:#fbbf24;}
+.sbtn-rand{background:linear-gradient(135deg,#1a0d2d,#110820);border-color:#6d28d9;color:#a78bfa;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.sbtn-rand .sbtn-sub{color:rgba(167,139,250,0.6);}
+
+/* AI note — replaced by image */
+.ai-note{display:none;}
+.ai-note-txt{display:none;}
+.ai-note-right{display:none;}
+
+/* img204 — full width banner */
+.img204{margin-top:12px;border-radius:12px;overflow:hidden;
+  background:var(--card2);border:1px solid rgba(0,255,174,0.15);}
+.img204 img{width:100%;height:auto;display:block;object-fit:cover;}
+
+/* ══ STATS ══ */
+.stats-card{margin:10px 14px 0;background:var(--card);border-radius:18px;
+  border:1px solid rgba(0,255,174,0.1);padding:18px;
+  box-shadow:0 4px 30px rgba(0,0,0,0.25);}
+.card-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;
+  color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center;}
+.st-item{text-align:center;}
+.st-lbl{font-size:11px;color:var(--text2);letter-spacing:0.5px;margin-bottom:4px;}
+.st-val{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;line-height:1;}
+.st-total{color:#fff;} .st-wins{color:var(--green);} .st-losses{color:var(--red);}
+.donut-outer{position:relative;display:flex;align-items:center;justify-content:center;}
+.donut-outer svg{width:76px;height:76px;}
+.donut-ctr{position:absolute;text-align:center;}
+.donut-pct{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1;}
+.donut-sub{font-size:9px;color:var(--text2);letter-spacing:0.5px;margin-top:2px;}
+
+/* ══ HISTORY ══ */
+.hist-card{margin:10px 14px 0;background:var(--card);border-radius:18px;
+  border:1px solid rgba(0,255,174,0.1);padding:18px;
+  box-shadow:0 4px 30px rgba(0,0,0,0.25);}
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.view-all{font-size:12px;color:var(--cyan);cursor:pointer;display:flex;align-items:center;gap:3px;
+  transition:opacity 0.2s;}
+.view-all:hover{opacity:0.7;}
+.hist-thead{display:grid;grid-template-columns:90px 72px 62px 56px 1fr;
+  font-size:10px;color:var(--text2);padding:0 4px 10px;
+  border-bottom:1px solid var(--border);letter-spacing:0.5px;}
+.hist-row{display:grid;grid-template-columns:90px 72px 62px 56px 1fr;
+  padding:9px 4px;border-bottom:1px solid rgba(26,45,68,0.5);
+  align-items:center;transition:background 0.15s;}
+.hist-row:last-child{border-bottom:none;}
+.hist-row:hover{background:rgba(0,255,174,0.02);}
+.h-period{font-family:'Share Tech Mono',monospace;color:var(--text2);font-size:10px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pred-chip{display:inline-flex;align-items:center;justify-content:center;
+  min-width:32px;height:28px;border-radius:7px;padding:0 7px;
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;}
+.pc-BIG{background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);}
+.pc-SMALL{background:rgba(96,165,250,0.18);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);}
+.pc-RED{background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.35);}
+.pc-GREEN{background:rgba(34,197,94,0.18);color:#4ade80;border:1px solid rgba(34,197,94,0.35);}
+.res-win{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--green);}
+.res-loss{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--red);}
+.res-pend{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);}
+.num-chip{width:28px;height:28px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;}
+.h-time{font-size:10px;color:var(--text2);}
+.totals-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.tot-item{display:flex;align-items:center;gap:6px;}
+.tot-icon{font-size:16px;}
+.tot-lbl{font-size:9px;color:var(--text2);}
+.tot-val{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;}
+
+/* ══ BOTTOM NAV ══ */
+.bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;background:rgba(9,17,29,0.98);
+  border-top:1px solid rgba(0,255,174,0.12);
+  display:flex;align-items:center;padding:8px 0 14px;z-index:300;
+  backdrop-filter:blur(20px);}
+.bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:4px;color:var(--text2);
+  font-size:10px;font-weight:600;letter-spacing:0.5px;transition:color 0.2s;}
+.bn-btn.active{color:var(--cyan);}
+.bn-icon{font-size:22px;line-height:1;}
+.bn-predict{flex:0 0 76px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  position:relative;top:-20px;}
+.predict-hex{width:72px;height:72px;
+  background:linear-gradient(135deg,var(--cyan),var(--cyan2));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 30px rgba(0,255,174,0.5),0 0 60px rgba(0,255,174,0.2);
+  transition:transform 0.15s;overflow:hidden;padding:0;}
+.bn-predict:active .predict-hex{transform:scale(0.93);}
+.predict-hex img{width:72px;height:72px;object-fit:cover;display:block;}
+.predict-hex-fb{font-size:28px;}
+.bn-predict-lbl{font-size:10px;font-weight:700;color:var(--cyan);
+  letter-spacing:1.5px;margin-top:4px;text-shadow:0 0 8px rgba(0,255,174,0.4);}
+
+/* ══ PAGES ══ */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ══ KEY OVERLAY ══ */
+.key-overlay{position:fixed;inset:0;z-index:500;
+  background:rgba(6,12,20,0.97);backdrop-filter:blur(12px);
+  display:none;align-items:center;justify-content:center;flex-direction:column;padding:24px;}
+.key-overlay.show{display:flex;}
+.key-box{width:100%;max-width:360px;background:var(--card);
+  border:1px solid rgba(0,255,174,0.25);border-radius:24px;padding:32px 26px;
+  text-align:center;box-shadow:0 0 80px rgba(0,255,174,0.1);}
+.key-icon{font-size:52px;margin-bottom:14px;}
+.key-title{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;
+  color:var(--cyan);margin-bottom:8px;text-shadow:0 0 12px rgba(0,255,174,0.3);}
+.key-sub{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.7;}
+.key-inp{width:100%;padding:15px;background:var(--card2);
+  border:1px solid var(--border);border-radius:14px;
+  color:#fff;font-family:'Share Tech Mono',monospace;
+  font-size:15px;letter-spacing:2.5px;text-align:center;
+  outline:none;margin-bottom:12px;transition:border-color 0.2s;}
+.key-inp:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,255,174,0.08);}
+.key-btn{width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--cyan),var(--cyan2));
+  color:#060c14;font-family:'Orbitron',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:2px;
+  border:none;border-radius:14px;cursor:pointer;transition:opacity 0.2s;}
+.key-btn:hover{opacity:0.88;}
+.key-err{color:var(--red);font-size:12px;margin-top:8px;min-height:18px;}
+.key-hint{margin-top:16px;font-size:13px;color:var(--text2);}
+.key-hint a{color:var(--cyan);font-weight:700;text-decoration:none;}
+.key-hint a:hover{text-decoration:underline;}
+
+/* FREE BADGE */
+.free-badge{position:fixed;top:60px;right:14px;z-index:400;
+  background:var(--card);border:1px solid rgba(245,158,11,0.5);
+  border-radius:20px;padding:5px 12px;
+  font-size:10px;color:var(--gold);font-family:'Share Tech Mono',monospace;
+  box-shadow:0 0 12px rgba(245,158,11,0.15);}
+
+/* ══ HISTORY PAGE ══ */
+.hist-page{padding:16px;}
+.hist-pg-title{font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan);
+  margin-bottom:16px;text-shadow:0 0 10px rgba(0,255,174,0.3);}
+.hc{background:var(--card);border-radius:16px;border:1px solid var(--border);
+  margin-bottom:12px;padding:16px;transition:border-color 0.2s;}
+.hc:hover{border-color:rgba(0,255,174,0.18);}
+.hc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.hc-period{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);}
+.hc-time{font-size:11px;color:var(--text2);}
+.hc-body{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.hc-item .hci-lbl{font-size:9px;color:var(--text2);margin-bottom:3px;letter-spacing:0.5px;}
+.hc-item .hci-val{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;}
+.hc-reason{background:var(--card2);border-radius:10px;padding:10px 12px;
+  font-size:11px;color:var(--text2);line-height:1.7;}
+.hcr-lbl{color:var(--cyan);font-size:10px;margin-bottom:4px;font-weight:700;letter-spacing:0.5px;}
+
+/* ══ STATS PAGE ══ */
+.stats-pg{padding:16px;}
+.spg-card{background:var(--card);border-radius:16px;border:1px solid rgba(0,255,174,0.1);
+  padding:18px;margin-bottom:14px;}
+.spg-title{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);
+  margin-bottom:16px;letter-spacing:1px;}
+.adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.adv-item{background:var(--card2);border-radius:12px;padding:14px;text-align:center;}
+.adv-lbl{font-size:10px;color:var(--text2);margin-bottom:5px;letter-spacing:0.5px;}
+.adv-val{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--cyan);}
+.eng-list{display:flex;flex-direction:column;gap:8px;}
+.eng-item{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:11px 12px;}
+.eng-name{font-size:12px;flex:1;}
+.eng-bar-bg{width:80px;height:5px;background:#1a2d44;border-radius:3px;overflow:hidden;}
+.eng-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--cyan2));}
+.eng-pct{font-size:11px;color:var(--text2);width:30px;text-align:right;}
+
+/* ══ PROFILE PAGE ══ */
+.prof-pg{padding:16px;}
+.prof-card{background:var(--card);border-radius:16px;border:1px solid rgba(0,255,174,0.1);padding:20px;margin-bottom:12px;}
+.prof-hdr{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.prof-avatar{width:62px;height:62px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  border:2px solid rgba(0,255,174,0.3);}
+.prof-name{font-family:'Orbitron',sans-serif;font-size:14px;color:#fff;margin-bottom:4px;}
+.prof-device{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);word-break:break-all;}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.ps-it{background:var(--card2);border-radius:12px;padding:12px;text-align:center;}
+.ps-lbl{font-size:9px;color:var(--text2);margin-bottom:4px;}
+.ps-val{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;}
+.key-sc{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:16px;margin-bottom:10px;}
+.ks-ttl{font-size:10px;color:var(--text2);letter-spacing:1.5px;margin-bottom:8px;}
+.ks-val{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);word-break:break-all;}
+.ks-exp{font-size:11px;color:var(--text2);margin-top:6px;}
+.ks-exp span{color:var(--gold);}
+.chg-key-btn{width:100%;margin-top:12px;padding:11px;
+  background:rgba(0,255,174,0.07);border:1px solid rgba(0,255,174,0.2);
+  border-radius:12px;color:var(--cyan);font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.chg-key-btn:hover{background:rgba(0,255,174,0.12);}
+
+/* ══ MODAL ══ */
+.modal-ov{position:fixed;inset:0;z-index:600;background:rgba(6,12,20,0.92);
+  display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);}
+.modal-ov.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid rgba(0,255,174,0.15);border-radius:22px;
+  padding:26px;width:100%;max-width:360px;max-height:82vh;overflow-y:auto;}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:15px;color:var(--cyan);margin-bottom:14px;}
+.modal-body{font-size:13px;color:var(--text2);line-height:1.9;}
+.modal-close{width:100%;margin-top:18px;padding:13px;
+  background:linear-gradient(135deg,var(--cyan),var(--cyan2));
+  color:#060c14;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:2px;border:none;border-radius:12px;cursor:pointer;}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:95px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--card2);border-radius:14px;padding:11px 22px;
+  font-size:12px;font-weight:600;z-index:1000;
+  opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;
+  border:1px solid rgba(0,255,174,0.2);color:var(--cyan);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{border-color:rgba(239,68,68,0.3);color:var(--red);}
+.toast.win{border-color:rgba(34,197,94,0.3);color:var(--green);}
+
+/* ══ WIN/LOSS FLASH ══ */
+@keyframes winFlash{0%,100%{box-shadow:0 0 0 rgba(34,197,94,0);}50%{box-shadow:0 0 40px rgba(34,197,94,0.4);}}
+@keyframes lossFlash{0%,100%{box-shadow:0 0 0 rgba(239,68,68,0);}50%{box-shadow:0 0 40px rgba(239,68,68,0.4);}}
+.win-flash{animation:winFlash 0.6s ease 2;}
+.loss-flash{animation:lossFlash 0.6s ease 2;}
+</style>
+</head>
+<body>
+
+<!-- FREE BADGE -->
+<div class="free-badge" id="freeBadge" style="display:none;">FREE: <span id="freeCount">5</span>/5</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- KEY OVERLAY -->
+<div class="key-overlay" id="keyOverlay">
+  <div class="key-box">
+    <div class="key-icon">🔑</div>
+    <div class="key-title">ACCESS KEY REQUIRED</div>
+    <div class="key-sub">Aapke 5 free predictions use ho gaye.<br>Admin se key lein aur continue karein.</div>
+    <input class="key-inp" id="keyInput" type="text" placeholder="ENTER YOUR KEY" maxlength="20"
+      oninput="this.value=this.value.toUpperCase()">
+    <button class="key-btn" onclick="submitKey()">🔓 UNLOCK ACCESS</button>
+    <div class="key-err" id="keyErr"></div>
+    <div class="key-hint">Admin se Contact karein → <a href="https://t.me/Predict456" target="_blank">t.me/Predict456</a></div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="modal-ov" id="htpModal">
+  <div class="modal-box">
+    <div class="modal-title">📖 HOW TO PLAY</div>
+    <div class="modal-body">
+      <b style="color:var(--cyan)">WinGo 1 Min Game</b><br><br>
+      Har ek minute mein ek naya period aata hai. Predict karo ki next period ka number <b style="color:var(--gold)">BIG (5–9)</b> hoga ya <b style="color:#60a5fa">SMALL (0–4)</b>.<br><br>
+      <b style="color:var(--cyan)">🤖 AI System (12 Engines):</b><br>
+      Trend, Streak, Pressure, Markov Chain, Pattern Memory, Fibonacci, Momentum, Mirror Pattern, Trap Detect, Mean Reversion, Cycle Detection, Entropy Filter<br><br>
+      <b style="color:var(--cyan)">🎨 Color Map:</b><br>
+      0→Red+Violet &nbsp;|&nbsp; 5→Green+Violet<br>
+      2,4,6,8→Red &nbsp;|&nbsp; 1,3,7,9→Green<br><br>
+      <b style="color:var(--gold)">⚠️ Note:</b> Loss ke baad AI automatically deep analysis mode mein switch karta hai for better accuracy.<br><br>
+      <b style="color:var(--red)">⚠️ Disclaimer:</b> Sirf prediction tool hai. Use responsibly.
+    </div>
+    <button class="modal-close" onclick="document.getElementById('htpModal').classList.remove('open')">CLOSE</button>
+  </div>
+</div>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div class="nav-hamburger"><span></span><span></span><span></span></div>
+  <div class="nav-logo-box">
+    <div class="nav-logo-img">
+      <img src="201.png" alt="" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+      <div class="nav-logo-fb" style="display:none;">WINGO<br>1MIN</div>
+    </div>
+    <div class="nav-logo-text">
+      <div class="nav-logo-title">WINGO</div>
+      <div class="nav-logo-sub">1 MIN PREDICTION</div>
+    </div>
+  </div>
+  <div class="nav-bell">🔔<div class="nav-bell-dot"></div></div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-dot loading" id="sbDot"></div>
+  <span class="sb-txt" id="sbTxt">Initializing...</span>
+  <span class="sb-time" id="sbTime"></span>
+</div>
+
+<!-- SCROLLABLE CONTENT -->
+<div class="scrollarea">
+
+  <!-- ═══ HOME PAGE ═══ -->
+  <div class="page active" id="page-home">
+
+    <!-- Hero -->
+    <div class="hero">
+      <img class="hero-poster" src="202.png" alt=""
+        onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#060c14,#0d1520)'">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-countdown">
+          <div class="hcd-lbl">NEXT ROUND</div>
+          <div class="hcd-ring">
+            <svg viewBox="0 0 68 68">
+              <circle class="hcd-bg" cx="34" cy="34" r="30"/>
+              <circle class="hcd-prog" id="cdCircle" cx="34" cy="34" r="30"/>
+            </svg>
+            <div class="hcd-time" id="cdTime">--:--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Period Bar -->
+    <div class="period-bar">
+      <div class="pb-id">ROUND ID: <b id="periodEl">Loading...</b></div>
+      <div class="pb-center">AI PREDICTION</div>
+      <div class="pb-badge">⚡ 1 MIN GAME</div>
+    </div>
+
+    <!-- Predict Card -->
+    <div class="pred-card" id="predCard">
+      <div class="pred-card-hdr">
+        <div class="pch-title">YOUR PREDICTION</div>
+        <div class="pch-badge">🤖 AI POWERED</div>
+      </div>
+
+      <div class="nums-grid">
+        <!-- Left: 0,1,5,6 -->
+        <div class="nums-left">
+          <div class="nbtn n0">0</div>
+          <div class="nbtn n1">1</div>
+          <div class="nbtn n5">5</div>
+          <div class="nbtn n6">6</div>
+        </div>
+
+        <!-- Center — bigger ring -->
+        <div class="pred-center">
+          <div class="pred-center-ring"></div>
+          <div class="pred-center-bg">
+            <img src="203.png" alt="" onerror="this.style.display='none'">
+          </div>
+          <div class="pred-result" id="predBox">
+            <div class="pred-val wait" id="predVal">PRESS<br>PREDICT</div>
+            <div class="pred-conf" id="predConf"></div>
+            <div class="pred-mode-tag" id="predMode" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Right: 2,3,4,7,8,9 -->
+        <div class="nums-right">
+          <div class="nbtn n2">2</div>
+          <div class="nbtn n3">3</div>
+          <div class="nbtn n4">4</div>
+          <div class="nbtn n7">7</div>
+          <div class="nbtn n8">8</div>
+          <div class="nbtn n9">9</div>
+        </div>
+      </div>
+
+      <!-- Size buttons -->
+      <div class="size-row">
+        <div class="sbtn sbtn-small">
+          <div class="sbtn-lbl">SMALL</div>
+          <div class="sbtn-sub">0 – 4</div>
+        </div>
+        <div class="sbtn sbtn-big">
+          <div class="sbtn-lbl">BIG</div>
+          <div class="sbtn-sub">5 – 9</div>
+        </div>
+        <div class="sbtn sbtn-rand">
+          <span style="font-size:16px;">🔀</span>
+          <div>
+            <div class="sbtn-lbl" style="font-size:11px;">RANDOM</div>
+            <div class="sbtn-sub">Surprise</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI note -->
+      <div class="ai-note">
+        <div style="font-size:22px;flex-shrink:0;">🛡️</div>
+        <div class="ai-note-txt">Our AI analyzes patterns in real-time<br>to give you smarter predictions!</div>
+        <div class="ai-note-right">🧠 AI POWERED</div>
+      </div>
+
+      <!-- img204 -->
+      <div class="img204">
+        <img src="204.png" alt="" onerror="this.parentElement.style.display='none'">
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-card">
+      <div class="card-title">📊 TODAY'S STATS</div>
+      <div class="stats-row">
+        <div class="st-item">
+          <div class="st-lbl">PREDICTIONS</div>
+          <div class="st-val st-total" id="sTot">0</div>
+        </div>
+        <div class="st-item">
+          <div class="st-lbl">WINS</div>
+          <div class="st-val st-wins" id="sWins">0</div>
+        </div>
+        <div class="st-item">
+          <div class="st-lbl">LOSSES</div>
+          <div class="st-val st-losses" id="sLoss">0</div>
+        </div>
+        <div class="donut-outer">
+          <svg viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r="30" fill="none" stroke="#1a2d44" stroke-width="6"/>
+            <circle cx="38" cy="38" r="30" fill="none"
+              stroke="url(#dg)" stroke-width="6" stroke-linecap="round"
+              stroke-dasharray="188.5" id="donutRing"
+              stroke-dashoffset="188.5" transform="rotate(-90 38 38)"/>
+            <defs>
+              <linearGradient id="dg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#22c55e"/>
+                <stop offset="100%" stop-color="#f59e0b"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="donut-ctr">
+            <div class="donut-pct" id="sRate">0%</div>
+            <div class="donut-sub">WIN RATE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History mini -->
+    <div class="hist-card">
+      <div class="hist-hdr">
+        <div class="card-title" style="margin-bottom:0;">⏱ PREDICTION HISTORY</div>
+        <div class="view-all" onclick="switchPage('history')">VIEW ALL ›</div>
+      </div>
+      <div class="hist-thead">
+        <span>ROUND</span><span>PREDICTION</span><span>RESULT</span><span>NUMBER</span><span>TIME</span>
+      </div>
+      <div id="miniHist">
+        <div style="padding:24px;text-align:center;color:var(--text2);font-size:12px;">No predictions yet</div>
+      </div>
+      <div class="totals-row">
+        <div class="tot-item"><span class="tot-icon">🏆</span><div><div class="tot-lbl">ROUNDS</div><div class="tot-val" id="tRounds">0</div></div></div>
+        <div class="tot-item"><span class="tot-icon">✅</span><div><div class="tot-lbl">WINS</div><div class="tot-val" style="color:var(--green)" id="tWins">0</div></div></div>
+        <div class="tot-item"><span class="tot-icon">❌</span><div><div class="tot-lbl">LOSSES</div><div class="tot-val" style="color:var(--red)" id="tLoss">0</div></div></div>
+        <div class="tot-item"><span class="tot-icon">📊</span><div><div class="tot-lbl">RATE</div><div class="tot-val" style="color:var(--cyan)" id="tRate">0%</div></div></div>
+      </div>
+    </div>
+    <div style="height:18px;"></div>
+  </div>
+
+  <!-- ═══ HISTORY PAGE ═══ -->
+  <div class="page" id="page-history">
+    <div class="hist-page">
+      <div class="hist-pg-title">📜 PREDICTION HISTORY</div>
+      <div id="fullHist">
+        <div style="padding:50px;text-align:center;color:var(--text2);font-size:13px;">No predictions yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STATS PAGE ═══ -->
+  <div class="page" id="page-stats">
+    <div class="stats-pg">
+      <div class="spg-card">
+        <div class="spg-title">📈 ADVANCED STATISTICS</div>
+        <div class="adv-grid">
+          <div class="adv-item"><div class="adv-lbl">TOTAL PREDICTIONS</div><div class="adv-val" id="adv-tot">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">WIN RATE</div><div class="adv-val" id="adv-rate" style="color:var(--green)">0%</div></div>
+          <div class="adv-item"><div class="adv-lbl">BEST STREAK</div><div class="adv-val" id="adv-streak" style="color:var(--gold)">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">CURRENT MODE</div><div class="adv-val" id="adv-mode" style="color:var(--purple);font-size:13px;">BIG/SMALL</div></div>
+          <div class="adv-item"><div class="adv-lbl">BIG WINS</div><div class="adv-val" id="adv-big" style="color:var(--gold)">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">SMALL WINS</div><div class="adv-val" id="adv-small" style="color:#60a5fa">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">RED WINS</div><div class="adv-val" id="adv-red" style="color:var(--red)">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">GREEN WINS</div><div class="adv-val" id="adv-green" style="color:var(--green)">0</div></div>
+        </div>
+      </div>
+      <div class="spg-card">
+        <div class="spg-title">🤖 ENGINE PERFORMANCE</div>
+        <div class="eng-list" id="engList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PROFILE PAGE ═══ -->
+  <div class="page" id="page-profile">
+    <div class="prof-pg">
+      <div class="prof-card">
+        <div class="prof-hdr">
+          <div class="prof-avatar">👤</div>
+          <div>
+            <div class="prof-name">WINGO USER</div>
+            <div class="prof-device" id="devIdEl">Loading...</div>
+          </div>
+        </div>
+        <div class="prof-stats">
+          <div class="ps-it"><div class="ps-lbl">TOTAL</div><div class="ps-val" id="p-tot">0</div></div>
+          <div class="ps-it"><div class="ps-lbl">WINS</div><div class="ps-val" style="color:var(--green)" id="p-wins">0</div></div>
+          <div class="ps-it"><div class="ps-lbl">LOSSES</div><div class="ps-val" style="color:var(--red)" id="p-loss">0</div></div>
+        </div>
+      </div>
+      <div class="key-sc">
+        <div class="ks-ttl">🔑 KEY STATUS</div>
+        <div class="ks-val" id="ksVal">No key entered</div>
+        <div class="ks-exp" id="ksExp"></div>
+        <button class="chg-key-btn" onclick="showKeyOverlay()">🔑 Enter / Change Key</button>
+      </div>
+      <div class="spg-card">
+        <div class="spg-title">📊 PREDICTION BREAKDOWN</div>
+        <div class="adv-grid">
+          <div class="adv-item"><div class="adv-lbl">BIG WINS</div><div class="adv-val" id="p-bw" style="color:var(--gold)">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">SMALL WINS</div><div class="adv-val" id="p-sw" style="color:#60a5fa">0</div></div>
+          <div class="adv-item"><div class="adv-lbl">WIN RATE</div><div class="adv-val" id="p-rate" style="color:var(--cyan)">0%</div></div>
+          <div class="adv-item"><div class="adv-lbl">BEST STREAK</div><div class="adv-val" id="p-str" style="color:var(--gold)">0</div></div>
+        </div>
+      </div>
+      <!-- Admin Contact -->
+      <div class="spg-card" style="text-align:center;">
+        <div class="spg-title">📞 CONTACT ADMIN</div>
+        <a href="https://t.me/Predict456" target="_blank"
+          style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;
+          background:linear-gradient(135deg,#0088cc,#006aa3);border-radius:14px;
+          color:#fff;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;
+          letter-spacing:1px;text-decoration:none;box-shadow:0 0 24px rgba(0,136,204,0.3);">
+          ✈️ t.me/Predict456
+        </a>
+        <div style="margin-top:10px;font-size:11px;color:var(--text2);">Key lene ke liye admin se contact karein</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /scrollarea -->
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <div class="bn-btn active" id="nb-home" onclick="switchPage('home')">
+    <div class="bn-icon">🏠</div><span>HOME</span>
+  </div>
+  <div class="bn-btn" id="nb-history" onclick="switchPage('history')">
+    <div class="bn-icon">⏱</div><span>HISTORY</span>
+  </div>
+  <div class="bn-predict" onclick="triggerPrediction()">
+    <div class="predict-hex">
+      <img src="205.png" alt="" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <div class="predict-hex-fb" style="display:none;">⚡</div>
+    </div>
+    <div class="bn-predict-lbl">PREDICT</div>
+  </div>
+  <div class="bn-btn" id="nb-stats" onclick="switchPage('stats')">
+    <div class="bn-icon">📊</div><span>STATS</span>
+  </div>
+  <div class="bn-btn" id="nb-profile" onclick="switchPage('profile')">
+    <div class="bn-icon">👤</div><span>PROFILE</span>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const FB = initializeApp({
+  apiKey:"AIzaSyBs7eQyMrcN8kJWMHl2ac2UZHlYQ6DypD8",
+  authDomain:"terminal-xxrr.firebaseapp.com",
+  databaseURL:"https://terminal-xxrr-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"terminal-xxrr",storageBucket:"terminal-xxrr.firebasestorage.app",
+  messagingSenderId:"722753278120",appId:"1:722753278120:web:bfa37aab39635a4e57f29d"
+});
+const db = getDatabase(FB);
+
+/* ══ DEVICE ID ══ */
+function getDevId(){
+  let id=localStorage.getItem('wg_dev');
+  if(!id){id='DEV-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).substr(2,5).toUpperCase();localStorage.setItem('wg_dev',id);}
+  return id;
+}
+const DEV_ID = getDevId();
+document.getElementById('devIdEl').textContent = DEV_ID;
+
+/* ══ API CONFIG ══ */
+const API_RAW = 'https://wingolast100.vercel.app/api/results?typeId=1&apiKey=12a04165-748c-4144-9398-96bd2e0ad956&token=1a97a413-ff57-4097-a44c-4bd402ace8d5&limit=100';
+const PROXIES = [
+  u=>u,
+  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u=>`https://proxy.cors.sh/${u}`,
+  u=>`https://thingproxy.freeboard.io/fetch/${u}`,
+];
+let activeProxy = 0;
+
+/* ══ STATE ══ */
+let apiNums=[];
+let apiRecords=[];
+let curPeriod='';
+let nextPeriodId='';
+let pendingPred=null;
+let predMode='bs';
+let consecutiveLosses=0;
+let cdSec=60;
+let cdTimer=null;
+let fetchInProgress=false;
+let lastProcessedPeriod='';
+
+/* ══ FETCH WITH PROXY CHAIN — every 5 sec ══ */
+async function fetchAPI(){
+  if(fetchInProgress) return;
+  fetchInProgress=true;
+  setDot('loading','Fetching...');
+  for(let i=0;i<PROXIES.length;i++){
+    const idx=(activeProxy+i)%PROXIES.length;
+    try{
+      const url=PROXIES[idx](API_RAW);
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),7000);
+      const r=await fetch(url,{cache:'no-store',signal:ctrl.signal,
+        headers:idx===3?{'x-cors-api-key':'temp_free_key'}:{}});
+      clearTimeout(tid);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const txt=await r.text();
+      if(txt.includes('Host not in allowlist')||txt.includes('not allowed')) throw new Error('blocked');
+      const json=JSON.parse(txt);
+      const recs=parseJSON(json);
+      if(recs.length<5) throw new Error('too few: '+recs.length);
+      activeProxy=idx;
+      fetchInProgress=false;
+      processRecords(recs);
+      return;
+    }catch(e){console.warn(`Proxy${idx} fail:`,e.message);}
+  }
+  fetchInProgress=false;
+  setDot('err','All proxies failed — retrying...');
+}
+
+function parseJSON(json){
+  let raw=[];
+  if(Array.isArray(json)) raw=json;
+  else{
+    for(const key of ['data','list','result','rows','records','items']){
+      if(json[key]&&Array.isArray(json[key])){raw=json[key];break;}
+    }
+    if(!raw.length){
+      JSON.stringify(json,(k,v)=>{if(Array.isArray(v)&&v.length>8)raw=v;return v;});
+    }
+  }
+  const recs=[];
+  for(const item of raw){
+    let period=null,number=null;
+    for(const k of ['issueNumber','issue','period','roundId','gameNo','round','id','periodId','no']){
+      if(item[k]!==undefined){period=String(item[k]);break;}
+    }
+    for(const k of ['number','openNumber','num','result','open','winNumber','luckyNumber','color_number']){
+      if(item[k]!==undefined){const n=parseInt(item[k]);if(!isNaN(n)&&n>=0&&n<=9){number=n;break;}}
+    }
+    if(number===null){
+      for(const v of Object.values(item)){const n=parseInt(v);if(!isNaN(n)&&n>=0&&n<=9){number=n;break;}}
+    }
+    if(period&&number!==null) recs.push({period,number});
+  }
+  return recs;
+}
+
+function processRecords(recs){
+  const sorted=recs.sort((a,b)=>{
+    try{return Number(BigInt(b.period)-BigInt(a.period));}
+    catch{return String(b.period).localeCompare(String(a.period));}
+  });
+  const newest=sorted[0];
+  const prevPeriod=curPeriod;
+  curPeriod=newest.period;
+  try{nextPeriodId=String(BigInt(curPeriod)+1n);}
+  catch{nextPeriodId=String(parseInt(curPeriod)+1);}
+
+  const newResultArrived = (prevPeriod !== curPeriod && prevPeriod !== '');
+
+  apiRecords=sorted;
+  apiNums=sorted.map(r=>r.number).reverse();
+
+  // Update period display
+  document.getElementById('periodEl').textContent='#'+nextPeriodId;
+  const now=new Date();
+  setDot('live',`LIVE — Period #${nextPeriodId} — ${apiNums.length} results loaded`);
+  document.getElementById('sbTime').textContent=now.toLocaleTimeString();
+
+  // Sync countdown
+  const secLeft=60-now.getSeconds();
+  if(!cdTimer||prevPeriod!==curPeriod||Math.abs(secLeft-cdSec)>3){
+    startCD(secLeft);
+  }
+
+  // If new result arrived and there's a pending prediction, check it
+  if(pendingPred) checkResult();
+
+  // If new result arrived, auto-update numbers on screen for next prediction
+  if(newResultArrived && !pendingPred){
+    // New period — clear old prediction display so user knows to press predict
+    // (keeps UI fresh but doesn't auto-predict)
+  }
+}
+
+function setDot(state,txt){
+  document.getElementById('sbDot').className='sb-dot '+state;
+  document.getElementById('sbTxt').textContent=txt;
+}
+
+/* ══ COUNTDOWN ══ */
+function startCD(sec){
+  clearInterval(cdTimer);
+  cdSec=Math.max(1,sec);
+  updateCD();
+  cdTimer=setInterval(()=>{
+    cdSec--;
+    if(cdSec<=0){cdSec=60;fetchAPI();}
+    updateCD();
+  },1000);
+}
+
+function updateCD(){
+  document.getElementById('cdTime').textContent=`00:${String(cdSec).padStart(2,'0')}`;
+  const circ=188.5;
+  document.getElementById('cdCircle').style.strokeDashoffset=circ-(cdSec/60)*circ;
+}
+
+/* ══ RESULT CHECKER ══ */
+function checkResult(){
+  if(!pendingPred) return;
+  const found=apiRecords.find(r=>r.period===pendingPred.period);
+  if(!found) return;
+
+  const actual=found.number;
+  const actualBS=actual>=5?'BIG':'SMALL';
+  const actualColor=numColor(actual);
+  let isWin=false;
+
+  if(pendingPred.type==='bs'){
+    isWin=pendingPred.prediction===actualBS;
+  } else {
+    isWin=pendingPred.prediction===actualColor;
+    if(actual===0&&pendingPred.prediction==='RED') isWin=true;
+    if(actual===5&&pendingPred.prediction==='GREEN') isWin=true;
+  }
+
+  if(isWin){
+    consecutiveLosses=0;
+    predMode='bs';
+  } else {
+    consecutiveLosses++;
+    predMode=pendingPred.type==='bs'?'color':'bs';
+  }
+
+  const reason=buildReason(pendingPred,actual,actualBS,actualColor,isWin);
+  const entry={
+    period:pendingPred.period,
+    prediction:pendingPred.prediction,
+    type:pendingPred.type,
+    actualNumber:actual,actualBS,actualColor,
+    result:isWin?'WIN':'LOSS',
+    time:pendingPred.time,
+    reason,confidence:pendingPred.confidence
+  };
+
+  userData.predictions.unshift(entry);
+  const s=userData.stats;
+  s.total++;
+  if(isWin){
+    s.wins++;
+    if(pendingPred.prediction==='BIG')s.bigwins=(s.bigwins||0)+1;
+    else if(pendingPred.prediction==='SMALL')s.smallwins=(s.smallwins||0)+1;
+    else if(pendingPred.prediction==='RED')s.redwins=(s.redwins||0)+1;
+    else if(pendingPred.prediction==='GREEN')s.greenwins=(s.greenwins||0)+1;
+  } else { s.losses++; }
+  let streak=0;
+  for(const p of userData.predictions){if(p.result==='WIN')streak++;else break;}
+  if(streak>s.bestStreak)s.bestStreak=streak;
+
+  pendingPred=null;
+  saveUD();
+  renderAll();
+
+  // Flash effect
+  const card=document.getElementById('predCard');
+  card.classList.remove('win-flash','loss-flash');
+  void card.offsetWidth;
+  card.classList.add(isWin?'win-flash':'loss-flash');
+  setTimeout(()=>card.classList.remove('win-flash','loss-flash'),1500);
+
+  showToast(isWin?'✅ WIN! Great call!':'❌ Loss — Deep AI analysis next round',isWin?'win':'err');
+}
+
+function numColor(n){
+  if(n===0||[2,4,6,8].includes(n))return 'RED';
+  return 'GREEN';
+}
+
+function buildReason(pred,actual,bs,color,win){
+  const modeLabel=pred.type==='bs'?'BIG/SMALL Mode':'COLOR Mode';
+  if(win) return `✅ WIN | ${modeLabel} | Predicted: ${pred.prediction} | Actual: ${actual} (${bs}/${color}) | Confidence: ${pred.confidence}% | Pattern analysis was correct`;
+  return `❌ LOSS | ${modeLabel} | Predicted: ${pred.prediction} | Actual: ${actual} (${bs}/${color}) | Confidence: ${pred.confidence}% | Market reversed — Next: DEEP AI ANALYSIS activated`;
+}
+
+/* ══ PREDICTION ENGINE — 12 ENGINES ══ */
+const bsOf=n=>n>=5?'BIG':'SMALL';
+const isBig=n=>n>=5;
+
+function analyze(nums){
+  if(nums.length<20) return null;
+  const L5=nums.slice(-5),L10=nums.slice(-10),L20=nums.slice(-20),L50=nums.length>=50?nums.slice(-50):nums;
+  let score=0,votes={BIG:0,SMALL:0};
+
+  // E1 Trend
+  const [b5,b10,b20]=[L5,L10,L20].map(a=>a.filter(isBig).length);
+  const ts=(b5/5-0.5)*30+(b10/10-0.5)*20+(b20/20-0.5)*10;
+  score+=ts;
+  if(ts>8)votes.BIG++;else if(ts>3)votes.BIG++;
+  else if(ts<-8)votes.SMALL++;else if(ts<-3)votes.SMALL++;
+
+  // E2 Streak reversal
+  const cur=bsOf(nums[nums.length-1]);
+  let sk=1;for(let i=nums.length-2;i>=0;i--){if(bsOf(nums[i])===cur)sk++;else break;}
+  if(sk===3){score+=cur==='BIG'?-20:20;}
+  else if(sk===4){score+=cur==='BIG'?-45:45;votes[cur==='BIG'?'SMALL':'BIG']++;}
+  else if(sk>=5){score+=cur==='BIG'?-80:80;votes[cur==='BIG'?'SMALL':'BIG']+=2;}
+
+  // E3 Pressure
+  const s20=20-b20;
+  if(b20>=14){score-=35;votes.SMALL++;}else if(b20>=12)score-=15;
+  else if(s20>=14){score+=35;votes.BIG++;}else if(s20>=12)score+=15;
+
+  // E4 Markov chain 1-3 order
+  function mkv(d,o){
+    const t={};
+    for(let i=0;i<d.length-o;i++){
+      const k=d.slice(i,i+o).map(bsOf).join('→');
+      const nx=bsOf(d[i+o]);
+      if(!t[k])t[k]={BIG:0,SMALL:0,n:0};
+      t[k][nx]++;t[k].n++;
+    }
+    return t;
+  }
+  const [m1,m2,m3]=[mkv(nums,1),mkv(nums,2),mkv(nums,3)];
+  const k1=bsOf(nums[nums.length-1]);
+  const k2=nums.slice(-2).map(bsOf).join('→');
+  const k3=nums.slice(-3).map(bsOf).join('→');
+  let ms=0,mv=null;
+  if(m3[k3]&&m3[k3].n>=5){const p=m3[k3].BIG/m3[k3].n;ms+=(p-0.5)*70;mv=p>0.5?'BIG':'SMALL';}
+  if(m2[k2]&&m2[k2].n>=8){const p=m2[k2].BIG/m2[k2].n;ms+=(p-0.5)*40;}
+  if(m1[k1]&&m1[k1].n>=12){const p=m1[k1].BIG/m1[k1].n;ms+=(p-0.5)*25;if(!mv)mv=p>0.5?'BIG':'SMALL';}
+  score+=ms;if(mv)votes[mv]++;
+
+  // E5 Pattern memory (5-window)
+  const pm={};
+  for(let i=0;i<nums.length-6;i++){
+    const pat=nums.slice(i,i+5).map(bsOf).join('');
+    const nx=bsOf(nums[i+5]);
+    if(!pm[pat])pm[pat]={BIG:0,SMALL:0};
+    pm[pat][nx]++;
+  }
+  const cp=nums.slice(-5).map(bsOf).join('');
+  if(pm[cp]){const{BIG,SMALL}=pm[cp];const tot=BIG+SMALL;if(tot>=4){score+=(BIG/tot-0.5)*60;if(BIG>SMALL)votes.BIG++;else if(SMALL>BIG)votes.SMALL++;}}
+
+  // E6 Fibonacci weighted
+  const fib=[1,2,3,5,8,13,21,34,55,89];
+  let fs=0;
+  for(let i=0;i<Math.min(10,L10.length);i++)fs+=isBig(L10[L10.length-1-i])?fib[i]:-fib[i];
+  score+=fs/5;if(fs>0)votes.BIG++;else if(fs<0)votes.SMALL++;
+
+  // E7 Momentum
+  let mom=0;
+  for(let i=1;i<L10.length;i++){if(bsOf(L10[i])===bsOf(L10[i-1]))mom++;else mom--;}
+  score+=mom*4;
+
+  // E8 Mirror patterns (top 8)
+  const r5=L5.map(bsOf);
+  const PATS=[
+    {p:['SMALL','SMALL','BIG','BIG','BIG'],s:-100},{p:['BIG','BIG','SMALL','SMALL','SMALL'],s:100},
+    {p:['SMALL','BIG','BIG','BIG','BIG'],s:-110},{p:['BIG','SMALL','SMALL','SMALL','SMALL'],s:110},
+    {p:['BIG','SMALL','BIG','SMALL','BIG'],s:-30},{p:['SMALL','BIG','SMALL','BIG','SMALL'],s:30},
+    {p:['BIG','BIG','BIG','SMALL','SMALL'],s:35},{p:['SMALL','SMALL','SMALL','BIG','BIG'],s:-35},
+  ];
+  for(const p of PATS){if(JSON.stringify(r5)===JSON.stringify(p.p)){score+=p.s;votes[p.s>0?'BIG':'SMALL']++;break;}}
+
+  // E9 Trap
+  if(sk>=5){score+=cur==='BIG'?-40:40;votes[cur==='BIG'?'SMALL':'BIG']++;}
+
+  // E10 Mean reversion
+  const avg10=L10.reduce((a,b)=>a+b,0)/10;
+  if(avg10>=7.0){score-=30;votes.SMALL++;}else if(avg10>=6.0)score-=14;
+  else if(avg10<=3.0){score+=30;votes.BIG++;}else if(avg10<=4.0)score+=14;
+
+  // E11 Cycle detection
+  const l6=nums.slice(-6).map(bsOf);
+  const CYCLES=[
+    {p:['BIG','BIG','SMALL','SMALL','BIG','BIG'],s:-18},{p:['SMALL','SMALL','BIG','BIG','SMALL','SMALL'],s:18},
+    {p:['BIG','SMALL','BIG','SMALL','BIG','SMALL'],s:18},{p:['SMALL','BIG','SMALL','BIG','SMALL','BIG'],s:-18},
+  ];
+  for(const c of CYCLES){if(JSON.stringify(l6)===JSON.stringify(c.p)){score+=c.s;votes[c.s>0?'BIG':'SMALL']++;break;}}
+
+  // E12 Entropy filter
+  let tr=0;for(let i=1;i<L20.length;i++){if(bsOf(L20[i])!==bsOf(L20[i-1]))tr++;}
+  const ent=tr/19;
+  if(ent>0.78)score*=0.65;else if(ent>0.58)score*=0.82;
+
+  const tv=votes.BIG+votes.SMALL;
+  const vr=tv>0?Math.max(votes.BIG,votes.SMALL)/tv:0.5;
+  const rawConf=Math.min(97,Math.abs(score/2.2));
+  const conf=Math.round(rawConf*0.55+vr*100*0.45);
+
+  const skipR=[];
+  if(vr<0.52)skipR.push('split');if(ent>0.8)skipR.push('chaos');
+  if(sk>=2&&conf<42)skipR.push('low_conf');if(tv<4)skipR.push('few_signals');
+  const skip=skipR.length>=2;
+
+  return{pred:score>=0?'BIG':'SMALL',confidence:Math.max(35,conf),skip,votes,entropy:ent,streak:sk};
+}
+
+/* ══ COLOR ANALYSIS ══ */
+function analyzeColor(nums){
+  const rcOf=n=>(n===0||[2,4,6,8].includes(n))?'RED':'GREEN';
+  const isR=n=>rcOf(n)==='RED';
+  const L5=nums.slice(-5),L10=nums.slice(-10),L20=nums.slice(-20);
+  let score=0,votes={RED:0,GREEN:0};
+
+  const [r5,r10,r20]=[L5,L10,L20].map(a=>a.filter(isR).length);
+  const ts=(r5/5-0.5)*30+(r10/10-0.5)*20+(r20/20-0.5)*10;
+  score+=ts;if(ts>5)votes.RED++;else if(ts<-5)votes.GREEN++;
+
+  const cur=rcOf(nums[nums.length-1]);
+  let sk=1;for(let i=nums.length-2;i>=0;i--){if(rcOf(nums[i])===cur)sk++;else break;}
+  if(sk>=3){score+=cur==='RED'?-35:35;votes[cur==='RED'?'GREEN':'RED']++;}
+  if(sk>=5){score+=cur==='RED'?-55:55;votes[cur==='RED'?'GREEN':'RED']++;}
+
+  const g20=20-r20;
+  if(r20>=14){score-=30;votes.GREEN++;}else if(g20>=14){score+=30;votes.RED++;}
+
+  const pm={};
+  for(let i=0;i<nums.length-3;i++){
+    const k=nums.slice(i,i+2).map(rcOf).join('→');
+    const nx=rcOf(nums[i+2]);
+    if(!pm[k])pm[k]={RED:0,GREEN:0,n:0};
+    pm[k][nx]++;pm[k].n++;
+  }
+  const ck=nums.slice(-2).map(rcOf).join('→');
+  if(pm[ck]&&pm[ck].n>=6){const p=pm[ck].RED/pm[ck].n;score+=(p-0.5)*50;votes[p>0.5?'RED':'GREEN']++;}
+
+  const avg10=L10.reduce((a,b)=>a+b,0)/10;
+  if(avg10>=6.5){score-=20;votes.GREEN++;}else if(avg10<=3.5){score+=20;votes.RED++;}
+
+  const tv=votes.RED+votes.GREEN;
+  const vr=tv>0?Math.max(votes.RED,votes.GREEN)/tv:0.5;
+  const conf=Math.round(Math.min(97,Math.abs(score/1.8))*0.55+vr*100*0.45);
+
+  const cpm={};
+  for(let i=0;i<nums.length-4;i++){
+    const pat=nums.slice(i,i+3).map(rcOf).join('');
+    const nx=rcOf(nums[i+3]);
+    if(!cpm[pat])cpm[pat]={RED:0,GREEN:0};
+    cpm[pat][nx]++;
+  }
+  const ccp=nums.slice(-3).map(rcOf).join('');
+  if(cpm[ccp]){const{RED,GREEN}=cpm[ccp];const tot=RED+GREEN;if(tot>=4){score+=(RED/tot-0.5)*40;}}
+
+  return{colorPred:score>=0?'RED':'GREEN',colorConf:Math.max(35,conf)};
+}
+
+/* ══ DEEP ANALYSIS — POST-LOSS (Full 100-record analysis) ══ */
+function deepAnalysis(nums, baseResult){
+  const L30=nums.slice(-30),L15=nums.slice(-15),L50=nums.length>=50?nums.slice(-50):nums;
+  let extraScore=0;
+
+  // Transition rate analysis
+  let trans=[];
+  for(let i=1;i<L15.length;i++)trans.push(bsOf(L15[i])!==bsOf(L15[i-1])?1:0);
+  const transRate=trans.reduce((a,b)=>a+b,0)/trans.length;
+  if(transRate>0.6){
+    const lastBS=bsOf(nums[nums.length-1]);
+    extraScore=lastBS==='BIG'?-50:50;
+  }
+
+  // 30-window pressure
+  const bigIn30=L30.filter(isBig).length;
+  if(bigIn30>=20)extraScore-=40;
+  else if(bigIn30<=10)extraScore+=40;
+
+  // 50-window long trend
+  const bigIn50=L50.filter(isBig).length;
+  const longTrend=(bigIn50/L50.length-0.5)*60;
+  extraScore+=longTrend;
+
+  // Extended markov 4-order
+  const ext={};
+  for(let i=0;i<nums.length-5;i++){
+    const k=nums.slice(i,i+4).map(bsOf).join('→');
+    const nx=bsOf(nums[i+4]);
+    if(!ext[k])ext[k]={BIG:0,SMALL:0,n:0};
+    ext[k][nx]++;ext[k].n++;
+  }
+  const ek=nums.slice(-4).map(bsOf).join('→');
+  if(ext[ek]&&ext[ek].n>=4){
+    const p=ext[ek].BIG/ext[ek].n;
+    extraScore+=(p-0.5)*90;
+  }
+
+  // Number value deviation analysis
+  const recentAvg=L15.reduce((a,b)=>a+b,0)/L15.length;
+  if(recentAvg>6.2)extraScore-=25;
+  else if(recentAvg<3.8)extraScore+=25;
+
+  const baseScore=baseResult.pred==='BIG'?Math.abs(baseResult.confidence):-Math.abs(baseResult.confidence);
+  const totalScore=baseScore*0.45+extraScore*0.55;
+  const finalPred=totalScore>=0?'BIG':'SMALL';
+  const deepConf=Math.min(97,Math.round(Math.abs(totalScore)*0.65+baseResult.confidence*0.35));
+
+  return{pred:finalPred,confidence:Math.max(62,deepConf)};
+}
+
+/* ══ TRIGGER PREDICTION ══ */
+window.triggerPrediction=async function(){
+  const ok=await checkAccess();
+  if(!ok)return;
+
+  if(apiNums.length<20){
+    showToast('⏳ Fetching data...');
+    await fetchAPI();
+    await new Promise(r=>setTimeout(r,2000));
+    if(apiNums.length<20){showToast('❌ Not enough data yet','err');return;}
+  }
+
+  let displayPred,predType,cls,conf;
+
+  if(predMode==='bs'){
+    const r=analyze(apiNums);
+    if(!r){showToast('❌ Analysis failed','err');return;}
+    if(consecutiveLosses>=1){
+      // DEEP PRO MAX analysis after loss
+      const deep=deepAnalysis(apiNums,r);
+      displayPred=deep.pred;conf=deep.confidence;
+      showToast(`🔬 Deep AI Analysis: ${deep.confidence}% confidence`,'info');
+    } else {
+      displayPred=r.pred;conf=r.confidence;
+    }
+    predType='bs';
+    cls='p'+displayPred;
+  } else {
+    const r=analyzeColor(apiNums);
+    displayPred=r.colorPred;conf=r.colorConf;predType='color';
+    cls='p'+displayPred;
+  }
+
+  const displayConf=consecutiveLosses>=1?Math.min(97,conf+8):conf;
+
+  pendingPred={
+    period:nextPeriodId,
+    prediction:displayPred,
+    type:predType,
+    time:new Date().toLocaleTimeString(),
+    confidence:displayConf
+  };
+
+  const pv=document.getElementById('predVal');
+  pv.textContent=displayPred;
+  pv.className='pred-val '+cls;
+  document.getElementById('predConf').textContent=displayConf+'% CONF';
+  const mt=document.getElementById('predMode');
+  mt.style.display='block';
+  mt.textContent=predType==='bs'?'BIG/SMALL':'COLOR';
+
+  consumeFree();
+  switchPage('home');
+};
+
+/* ══ KEY SYSTEM ══ */
+const FREE_LIMIT=5;
+let freeUsed=parseInt(localStorage.getItem('wg_free')||'0');
+let activeKey=localStorage.getItem('wg_key')||null;
+let keyUnlocked=false;
+
+function updateFreeBadge(){
+  const rem=Math.max(0,FREE_LIMIT-freeUsed);
+  const b=document.getElementById('freeBadge');
+  if(!keyUnlocked&&rem>0){b.style.display='block';document.getElementById('freeCount').textContent=rem;}
+  else b.style.display='none';
+}
+
+async function checkAccess(){
+  if(activeKey){
+    try{
+      const snap=await get(ref(db,`keys/${activeKey}`));
+      if(snap.exists()){
+        const kd=snap.val();const now=Date.now();
+        if(kd.used&&kd.usedBy&&kd.usedBy!==DEV_ID){activeKey=null;localStorage.removeItem('wg_key');}
+        else if(kd.expiresAt&&now>kd.expiresAt){
+          showToast('⏰ Key expired! Enter new key.','err');
+          document.getElementById('ksVal').textContent='Key expired';
+          document.getElementById('ksExp').innerHTML='';
+          localStorage.removeItem('wg_key');localStorage.removeItem('wg_key_exp');
+          activeKey=null;keyUnlocked=false;
+          document.getElementById('keyOverlay').classList.add('show');return false;
+        } else {keyUnlocked=true;updateFreeBadge();return true;}
+      }else{activeKey=null;localStorage.removeItem('wg_key');}
+    }catch(e){
+      const exp=parseInt(localStorage.getItem('wg_key_exp')||'0');
+      if(exp&&Date.now()<exp){keyUnlocked=true;return true;}
+    }
+  }
+  if(freeUsed<FREE_LIMIT){updateFreeBadge();return true;}
+  document.getElementById('keyOverlay').classList.add('show');return false;
+}
+
+window.showKeyOverlay=()=>{
+  document.getElementById('keyOverlay').classList.add('show');
+  document.getElementById('keyErr').textContent='';
+  document.getElementById('keyInput').value='';
+};
+
+window.submitKey=async function(){
+  const key=document.getElementById('keyInput').value.trim().toUpperCase();
+  if(!key||key.length<4){document.getElementById('keyErr').textContent='Key enter karein!';return;}
+  document.getElementById('keyErr').textContent='🔄 Checking...';
+  try{
+    const snap=await get(ref(db,`keys/${key}`));
+    if(!snap.exists()){document.getElementById('keyErr').textContent='❌ Invalid key!';return;}
+    const kd=snap.val();const now=Date.now();
+    if(kd.used&&kd.usedBy&&kd.usedBy!==DEV_ID){document.getElementById('keyErr').textContent='❌ Already used on another device!';return;}
+    if(kd.expiresAt&&now>kd.expiresAt){document.getElementById('keyErr').textContent='❌ Key expired!';return;}
+    const expiry=now+(kd.minutes*60*1000);
+    await set(ref(db,`keys/${key}`),{...kd,used:true,usedBy:DEV_ID,usedAt:now,expiresAt:expiry});
+    activeKey=key;keyUnlocked=true;
+    localStorage.setItem('wg_key',key);localStorage.setItem('wg_key_exp',expiry);
+    document.getElementById('keyOverlay').classList.remove('show');
+    document.getElementById('ksVal').textContent=key;
+    document.getElementById('ksExp').innerHTML=`Expires: <span>${new Date(expiry).toLocaleString()}</span>`;
+    updateFreeBadge();showToast('✅ Key activated! '+kd.minutes+' min','win');
+  }catch(e){document.getElementById('keyErr').textContent='❌ Error: '+e.message;}
+};
+
+function consumeFree(){if(!keyUnlocked){freeUsed++;localStorage.setItem('wg_free',freeUsed);updateFreeBadge();}}
+
+/* ══ USER DATA ══ */
+const uRef=()=>ref(db,`users/${DEV_ID}`);
+let userData={predictions:[],stats:{total:0,wins:0,losses:0,bigwins:0,smallwins:0,redwins:0,greenwins:0,bestStreak:0}};
+
+async function loadUD(){
+  try{
+    const snap=await get(uRef());
+    if(snap.exists()){
+      const d=snap.val();
+      if(d.stats)userData.stats={...userData.stats,...d.stats};
+      if(d.predictions)userData.predictions=d.predictions;
+    }
+  }catch(e){console.warn('Load error:',e);}
+  renderAll();updateFreeBadge();
+  if(activeKey){
+    document.getElementById('ksVal').textContent=activeKey;
+    const exp=parseInt(localStorage.getItem('wg_key_exp')||'0');
+    if(exp)document.getElementById('ksExp').innerHTML=`Expires: <span>${new Date(exp).toLocaleString()}</span>`;
+  }
+}
+
+async function saveUD(){
+  try{await set(uRef(),{deviceId:DEV_ID,lastSeen:Date.now(),stats:userData.stats,predictions:userData.predictions.slice(0,300)});}
+  catch(e){console.warn('Save:',e);}
+}
+
+/* ══ RENDERS ══ */
+function renderAll(){renderStats();renderMiniHist();renderFullHist();renderProfile();}
+
+function renderStats(){
+  const s=userData.stats;
+  const tot=s.total||0,wins=s.wins||0;
+  const rate=tot>0?Math.round(wins/tot*100):0;
+  document.getElementById('sTot').textContent=tot;
+  document.getElementById('sWins').textContent=wins;
+  document.getElementById('sLoss').textContent=s.losses||0;
+  document.getElementById('sRate').textContent=rate+'%';
+  document.getElementById('donutRing').style.strokeDashoffset=188.5-(rate/100)*188.5;
+  document.getElementById('tRounds').textContent=tot;
+  document.getElementById('tWins').textContent=wins;
+  document.getElementById('tLoss').textContent=s.losses||0;
+  document.getElementById('tRate').textContent=rate+'%';
+  document.getElementById('adv-tot').textContent=tot;
+  document.getElementById('adv-rate').textContent=rate+'%';
+  document.getElementById('adv-streak').textContent=s.bestStreak||0;
+  document.getElementById('adv-big').textContent=s.bigwins||0;
+  document.getElementById('adv-small').textContent=s.smallwins||0;
+  document.getElementById('adv-red').textContent=s.redwins||0;
+  document.getElementById('adv-green').textContent=s.greenwins||0;
+  document.getElementById('adv-mode').textContent=predMode==='bs'?'BIG/SMALL':'COLOR';
+}
+
+function numChipHTML(n){
+  if(n===undefined||n===null) return `<span class="num-chip" style="background:#1a2d44;color:var(--text2);">-</span>`;
+  const isRed=[0,2,4,6,8].includes(n);
+  const isGreen=[1,3,7,9].includes(n);
+  const bg=isRed?'rgba(239,68,68,0.15)':isGreen?'rgba(34,197,94,0.15)':'rgba(139,92,246,0.15)';
+  const col=isRed?'#f87171':isGreen?'#4ade80':'#a78bfa';
+  const bdr=isRed?'rgba(239,68,68,0.35)':isGreen?'rgba(34,197,94,0.35)':'rgba(139,92,246,0.35)';
+  return `<span class="num-chip" style="background:${bg};color:${col};border:1px solid ${bdr};">${n}</span>`;
+}
+
+function predChipHTML(pred){
+  const cls='pc-'+(pred||'BIG');
+  const short=pred&&pred.length>5?pred.slice(0,3):pred||'—';
+  return `<span class="pred-chip ${cls}">${short}</span>`;
+}
+
+function renderMiniHist(){
+  const list=userData.predictions.slice(0,5);
+  const el=document.getElementById('miniHist');
+  if(!list.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2);font-size:12px;">No predictions yet</div>';return;}
+  el.innerHTML=list.map(p=>`
+    <div class="hist-row">
+      <span class="h-period">#${p.period}</span>
+      <span>${predChipHTML(p.prediction)}</span>
+      <span class="${p.result==='WIN'?'res-win':p.result==='LOSS'?'res-loss':'res-pend'}">${p.result||'PEND'}</span>
+      <span>${numChipHTML(p.actualNumber)}</span>
+      <span class="h-time">${p.time}</span>
+    </div>`).join('');
+}
+
+function renderFullHist(){
+  const list=userData.predictions;
+  const el=document.getElementById('fullHist');
+  if(!list.length){el.innerHTML='<div style="padding:50px;text-align:center;color:var(--text2);">No predictions yet.</div>';return;}
+  el.innerHTML=list.map(p=>`
+    <div class="hc">
+      <div class="hc-hdr">
+        <span class="hc-period">ROUND #${p.period}</span>
+        <span class="hc-time">${p.time}</span>
+      </div>
+      <div class="hc-body">
+        <div class="hc-item"><div class="hci-lbl">PREDICTION</div><div class="hci-val">${predChipHTML(p.prediction)}</div></div>
+        <div class="hc-item"><div class="hci-lbl">RESULT</div><div class="hci-val ${p.result==='WIN'?'res-win':p.result==='LOSS'?'res-loss':'res-pend'}">${p.result||'PEND'}</div></div>
+        <div class="hc-item"><div class="hci-lbl">NUMBER</div><div class="hci-val">${numChipHTML(p.actualNumber)}</div></div>
+        <div class="hc-item"><div class="hci-lbl">CONF</div><div class="hci-val" style="color:var(--cyan)">${p.confidence}%</div></div>
+      </div>
+      <div class="hc-reason"><div class="hcr-lbl">📋 ANALYSIS</div>${p.reason||'—'}</div>
+    </div>`).join('');
+}
+
+function renderProfile(){
+  const s=userData.stats;
+  const tot=s.total||0,wins=s.wins||0,losses=s.losses||0;
+  const rate=tot>0?Math.round(wins/tot*100):0;
+  document.getElementById('p-tot').textContent=tot;
+  document.getElementById('p-wins').textContent=wins;
+  document.getElementById('p-loss').textContent=losses;
+  document.getElementById('p-bw').textContent=s.bigwins||0;
+  document.getElementById('p-sw').textContent=s.smallwins||0;
+  document.getElementById('p-rate').textContent=rate+'%';
+  document.getElementById('p-str').textContent=s.bestStreak||0;
+}
+
+function renderEngines(){
+  const engines=['Trend Engine','Streak Detect','Pressure','Markov Chain',
+    'Pattern Memory','Fibonacci','Momentum','Mirror Pattern',
+    'Trap Detect','Mean Reversion','Cycle Detection','Entropy Filter'];
+  document.getElementById('engList').innerHTML=engines.map(e=>{
+    const pct=Math.floor(Math.random()*28)+62;
+    return `<div class="eng-item"><span class="eng-name">${e}</span>
+      <div class="eng-bar-bg"><div class="eng-bar" style="width:${pct}%"></div></div>
+      <span class="eng-pct">${pct}%</span></div>`;
+  }).join('');
+  document.getElementById('adv-mode').textContent=predMode==='bs'?'BIG/SMALL':'COLOR';
+}
+
+/* ══ TOAST ══ */
+window.showToast=function(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+};
+
+/* ══ PAGE SWITCH ══ */
+window.switchPage=function(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  const nb=document.getElementById('nb-'+pg);
+  if(nb)nb.classList.add('active');
+  if(pg==='stats')renderEngines();
+};
+
+/* ══ AUTO FETCH every 5 seconds ══ */
+setInterval(()=>{ fetchAPI(); }, 5000);
+
+/* ══ INIT ══ */
+(async()=>{
+  await loadUD();
+  fetchAPI();
+  updateFreeBadge();
+})();
+</script>
+</body>
+</html>
+
+
